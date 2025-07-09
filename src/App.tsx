@@ -25,6 +25,7 @@ import CMSDashboard from './components/cms/CMSDashboard';
 import PagesManager from './components/cms/PagesManager';
 import MediaManager from './components/cms/MediaManager';
 import PricingManager from './components/cms/PricingManager';
+import StoreManager from './components/dashboard/StoreManager';
 import TawkChat from './components/ui/TawkChat';
 import CookieConsent from './components/ui/CookieConsent';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
@@ -129,6 +130,11 @@ function App() {
                   <h1 className="text-2xl font-bold">Super Admin Panel</h1>
                   <p className="text-gray-600">Manage all system operations from here.</p>
                 </div>
+              </ProtectedRoute>
+            } />
+            <Route path="store-manager" element={
+              <ProtectedRoute requiredRole={['super_admin']}>
+                <StoreManager />
               </ProtectedRoute>
             } />
             <Route path="schools" element={

@@ -28,6 +28,7 @@ const DashboardLayout: React.FC = () => {
       return [
         ...baseItems,
         { icon: <Shield size={20} />, label: 'Super Admin', path: '/dashboard/super-admin' },
+        { icon: <Package size={20} />, label: 'Store Manager', path: '/dashboard/store-manager' },
         { icon: <School size={20} />, label: 'Schools', path: '/dashboard/schools' },
         { icon: <Users size={20} />, label: 'Users', path: '/dashboard/users' },
         { icon: <CreditCard size={20} />, label: 'Subscriptions', path: '/dashboard/subscriptions' },

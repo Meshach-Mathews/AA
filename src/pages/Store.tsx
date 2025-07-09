@@ -314,6 +314,43 @@ const Store: React.FC = () => {
     setShowCheckout(true);
   };
 
+  // Fetch add-ons from database
+  useEffect(() => {
+    const fetchAddons = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('store_addons')
+          .select(`
+            *,
+            category:store_categories(name, slug)
+          `)
+          .eq('is_published', true)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Transform database data to match existing interface
+        const transformedAddons = data?.map(addon => ({
+          id: addon.id,
+          name: addon.name,
+          description: addon.description,
+          price: addon.price,
+          features: addon.features || [],
+          popular: addon.is_popular,
+          icon: <Package size={24} />,
+          category: addon.category?.slug === 'saas-addons' ? 'saas' : 'standalone'
+        })) || [];
+
+        // Update the existing addOns array with database data
+        setFilteredAddOns(transformedAddons);
+      } catch (error) {
+        console.error('Error fetching add-ons:', error);
+      }
+    };
+
+    fetchAddons();
+  }, []);
+
   return (
     <div className="pt-20 animate-fade-in">
       {/* Hero Section */}
@@ -608,9 +645,56 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, total, onClose, onS
 
   const handlePayment = () => {
     // Simulate payment processing
-    setTimeout(() => {
+    processOrder();
+  };
+
+  const processOrder = async () => {
+    try {
+      const orderData = {
+        customer_name: `${formData.firstName} ${formData.lastName}`,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        institution_name: formData.institution,
+        billing_address: {
+          address: formData.billingAddress,
+          city: formData.city,
+          country: formData.country
+        },
+        payment_method: formData.paymentMethod,
+        items: cart.map(item => ({
+          addon_id: item.id,
+          addon_name: item.name,
+          addon_description: item.description,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity
+        })),
+        subtotal: total,
+        tax_amount: 0,
+        discount_amount: 0,
+        total_amount: total
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-store-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to process order');
+      }
+
       setStep('success');
-    }, 2000);
+    } catch (error) {
+      console.error('Error processing order:', error);
+      alert('Failed to process order. Please try again.');
+    }
   };
 
   const handleSuccess = () => {
